@@ -5,19 +5,22 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 const ArbeitszeitRechner = () => {
   const [startzeit, setStartzeit] = useState(new Date());
   const [endzeit, setEndzeit] = useState(new Date());
-  const [pause, setPause] = useState(30);
+  const [pause, setPause] = useState(new Date(0, 0, 0, 0, 30));
   const [ergebnis, setErgebnis] = useState("");
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [showPausePicker, setShowPausePicker] = useState(false);
 
   const berechneArbeitszeit = () => {
     const arbeitszeit = (endzeit - startzeit) / (1000 * 60 * 60);
-    const arbeitszeitMitPause = arbeitszeit - pause / 60;
+    const pauseInStunden = (pause.getHours() * 60 + pause.getMinutes()) / 60;
+    const arbeitszeitMitPause = arbeitszeit - pauseInStunden;
     setErgebnis(`Effektive Arbeitszeit: ${arbeitszeitMitPause.toFixed(2)} Stunden`);
   };
 
   const berechneEndzeit = (zielArbeitszeit) => {
-    const end = new Date(startzeit.getTime() + zielArbeitszeit * 60 * 60 * 1000 + pause * 60 * 1000);
+    const pauseInMillis = (pause.getHours() * 60 + pause.getMinutes()) * 60 * 1000;
+    const end = new Date(startzeit.getTime() + zielArbeitszeit * 60 * 60 * 1000 + pauseInMillis);
     setErgebnis(`Endzeit für ${zielArbeitszeit} Stunden: ${end.toTimeString().slice(0, 5)}`);
   };
 
@@ -53,6 +56,22 @@ const ArbeitszeitRechner = () => {
           onChange={(event, date) => {
             setShowEndPicker(false);
             if (date) setEndzeit(date);
+          }}
+        />
+      )}
+
+      <TouchableOpacity style={styles.input} onPress={() => setShowPausePicker(true)}>
+        <Text>Pausenzeit: {pause.toTimeString().slice(3, 5)} Minuten</Text>
+      </TouchableOpacity>
+      {showPausePicker && (
+        <DateTimePicker
+          value={pause}
+          mode="time"
+          is24Hour={true}
+          display="spinner"
+          onChange={(event, date) => {
+            setShowPausePicker(false);
+            if (date) setPause(date);
           }}
         />
       )}
